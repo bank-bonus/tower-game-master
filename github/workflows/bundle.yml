@@ -15,26 +15,21 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Build Project
-        run: npm run build
-
-      - name: Bundle Everything
+      - name: Install Inliner & Build
         run: |
+          npm install
+          npm run build
           npm install -g inliner
-          # Проверяем, где лежит скомпилированный HTML
-          if [ -f "dist/index.html" ]; then
-            TARGET="dist/index.html"
+          # Определяем входной файл (пробуем dist, если нет - корень)
+          if [ -d "dist" ] && [ -f "dist/index.html" ]; then
+            inliner dist/index.html > index_single.html
           else
-            TARGET="index.html"
+            inliner index.html > index_single.html
           fi
-          echo "Использую файл: $TARGET"
-          inliner $TARGET > game_standalone.html
 
-      - name: Upload Single File
+      - name: Upload ONLY one file
         uses: actions/upload-artifact@v4
         with:
-          name: Standalone-Game
-          path: game_standalone.html
+          name: Game_One_File
+          # Ключевой момент: путь только к одному файлу!
+          path: index_single.html
