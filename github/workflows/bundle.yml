@@ -21,17 +21,20 @@ jobs:
       - name: Build Project
         run: npm run build
 
-      - name: Create Single HTML
+      - name: Bundle Everything
         run: |
-          # Устанавливаем упаковщик
           npm install -g inliner
-          # Склеиваем всё в один файл. 
-          # Мы берем index.html из папки dist, куда его положил npm run build
-          inliner dist/index.html > game_final.html
+          # Проверяем, где лежит скомпилированный HTML
+          if [ -f "dist/index.html" ]; then
+            TARGET="dist/index.html"
+          else
+            TARGET="index.html"
+          fi
+          echo "Использую файл: $TARGET"
+          inliner $TARGET > game_standalone.html
 
-      - name: Upload Result
+      - name: Upload Single File
         uses: actions/upload-artifact@v4
         with:
-          name: My-Single-File-Game
-          # Указываем путь ТОЛЬКО к одному файлу, чтобы не было лишних папок
-          path: game_final.html
+          name: Standalone-Game
+          path: game_standalone.html
