@@ -1,7 +1,8 @@
-name: Build Single HTML Game
+name: Ultimate Single File Build
 on:
   push:
     branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -15,21 +16,29 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Inliner & Build
+      - name: Build Game
         run: |
           npm install
           npm run build
-          npm install -g inliner
-          # Определяем входной файл (пробуем dist, если нет - корень)
-          if [ -d "dist" ] && [ -f "dist/index.html" ]; then
-            inliner dist/index.html > index_single.html
-          else
-            inliner index.html > index_single.html
-          fi
 
-      - name: Upload ONLY one file
+      - name: Use SingleFile to bundle everything
+        run: |
+          # Устанавливаем мощный упаковщик, который имитирует браузер
+          npm install -g "single-file-cli"
+          
+          # Запускаем локальный сервер в фоновом режиме, чтобы упаковщик мог "прочитать" игру
+          npx serve . & 
+          SLEEP_PID=$!
+          sleep 5 # Даем серверу прогрузиться
+          
+          # Захватываем страницу со всеми подгруженными картинками из JS
+          npx single-file http://localhost:3000/index.html standalone_game.html --browser-executable-path /usr/bin/google-chrome --browser-args '["--no-sandbox"]'
+          
+          kill $SLEEP_PID
+
+      - name: Upload Result
         uses: actions/upload-artifact@v4
         with:
-          name: Game_One_File
-          # Ключевой момент: путь только к одному файлу!
-          path: index_single.html
+          name: Portable_Tower_Game
+          # Указываем путь ТОЛЬКО к одному созданному файлу
+          path: standalone_game.html
