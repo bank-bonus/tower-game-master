@@ -1,1 +1,32 @@
+name: Build Single HTML Game
+on:
+  push:
+    branches: [ main ] # или master, смотря какая у вас ветка
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Production Build
+        run: npm run build # Сначала собираем проект как обычно в папку dist
+
+      - name: Inline everything into one file
+        run: |
+          npx inliner dist/index.html > single-game-file.html
+
+      - name: Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          name: single-html-game
+          path: single-game-file.html
 
