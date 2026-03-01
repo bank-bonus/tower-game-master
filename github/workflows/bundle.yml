@@ -1,4 +1,4 @@
-name: Ultimate Single File Build
+name: Create One HTML File
 on:
   push:
     branches: [ main, master ]
@@ -11,34 +11,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Build Game
+      - name: Build and Bundle
         run: |
           npm install
           npm run build
+          # Устанавливаем упаковщик, который заменяет ссылки на реальный код
+          npm install -g @shovon/inline-assets
+          
+          # Берем наш HTML и вшиваем в него JS и CSS
+          # Мы используем файл из корня, так как судя по твоей структуре он главный
+          inline-assets index.html standalone_game.html
 
-      - name: Use SingleFile to bundle everything
-        run: |
-          # Устанавливаем мощный упаковщик, который имитирует браузер
-          npm install -g "single-file-cli"
-          
-          # Запускаем локальный сервер в фоновом режиме, чтобы упаковщик мог "прочитать" игру
-          npx serve . & 
-          SLEEP_PID=$!
-          sleep 5 # Даем серверу прогрузиться
-          
-          # Захватываем страницу со всеми подгруженными картинками из JS
-          npx single-file http://localhost:3000/index.html standalone_game.html --browser-executable-path /usr/bin/google-chrome --browser-args '["--no-sandbox"]'
-          
-          kill $SLEEP_PID
-
-      - name: Upload Result
+      - name: Upload Single File
         uses: actions/upload-artifact@v4
         with:
-          name: Portable_Tower_Game
-          # Указываем путь ТОЛЬКО к одному созданному файлу
+          name: Mobile_Version_Game
           path: standalone_game.html
