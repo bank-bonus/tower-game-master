@@ -1,1 +1,36 @@
+name: Build Single HTML Game
+on:
+  push:
+    branches: [ main, master ]
 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Project Dependencies
+        run: npm install
+
+      - name: Build Project
+        run: npm run build # Создает папку dist
+
+      - name: Create Single HTML File
+        run: |
+          # Устанавливаем inliner прямо во время работы
+          npm install -g inliner
+          # Берем файл из папки dist и превращаем его в index_single.html
+          # Inliner сам найдет JS, CSS и картинки и вставит их внутрь
+          inliner dist/index.html > game_standalone.html
+
+      - name: Upload Single HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: Single-HTML-Game
+          path: game_standalone.html # Теперь загружаем ТОЛЬКО этот файл
